@@ -23,7 +23,7 @@ const SectionAddProduct = () => {
         toast.success(result.message || "Product added successfully");
       }
       if (result?.success === false) {
-        toast.error(result?.message || "Error adding product");
+        toast.error(result?.error || result?.message || "Error adding product");
       }
     });
   };

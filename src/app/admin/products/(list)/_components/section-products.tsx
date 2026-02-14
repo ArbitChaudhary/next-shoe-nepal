@@ -25,12 +25,17 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { IProduct } from "@/types/product-types";
+import ProductDetailModal from "@/modals/product-detail-modal";
+import { getProductById } from "@/actions/product.actions";
+import { toast } from "sonner";
 
 const Products = ({ products }: { products: IProduct[] }) => {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const pageRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -55,6 +60,14 @@ const Products = ({ products }: { products: IProduct[] }) => {
 
   const handleAddProduct = () => {
     router.push("/admin/products/add");
+  };
+
+  const handleOpenProductModal = async (id: string) => {
+    setSelectedProductId(id);
+    setIsModalOpen(true);
+  };
+  const handleModalClose = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -166,7 +179,10 @@ const Products = ({ products }: { products: IProduct[] }) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                      <button
+                        onClick={() => handleOpenProductModal(product?._id)}
+                        className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                      >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                       <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
@@ -183,6 +199,14 @@ const Products = ({ products }: { products: IProduct[] }) => {
           </Table>
         </CardContent>
       </Card>
+      {isModalOpen && (
+        <ProductDetailModal
+          open={isModalOpen}
+          onClose={handleModalClose}
+          productId={selectedProductId}
+          // product={product as IProduct}
+        />
+      )}
     </div>
   );
 };

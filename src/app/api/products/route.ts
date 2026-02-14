@@ -19,6 +19,34 @@ export const GET = async (req: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   try {
     const productData = await req.formData();
+
+    // const cleanData = Object.fromEntries(Object.entries(productData).map(([key, value]) => {
+    //   if(value === "undefined" || value === "null" || value === "") {
+    //     return [key, null]
+    // }))
+
+    const rawData = Object.fromEntries(productData.entries());
+
+    const cleanData = Object.fromEntries(
+      Object.entries(rawData).map(([key, value]) => {
+        // 1. Convert string 'undefined' or 'null' to actual undefined
+        if (value === "undefined" || value === "null" || value === "") {
+          return [key, undefined];
+        }
+
+        // 2. Convert string booleans to actual booleans
+        if (value === "true") return [key, true];
+        if (value === "false") return [key, false];
+
+        // 3. Convert numeric strings to actual numbers (for price, stock, etc.)
+        const numericFields = ["price", "stock", "lowStockThreshold"];
+        if (numericFields.includes(key) && !isNaN(Number(value))) {
+          return [key, Number(value)];
+        }
+
+        return [key, value];
+      }),
+    );
     const imageFile = productData.get("image") as File;
 
     if (!(imageFile instanceof File) || imageFile.size === 0) {
@@ -40,14 +68,19 @@ export const POST = async (req: NextRequest) => {
     const imageUrl = await uploadToCloudinary(fileUri);
     // console.log("Image uploaded to Cloudinary:", imageUrl.secure_url);
     const product = await Product.create({
-      ...Object.fromEntries(productData),
+      // ...Object.fromEntries(productData),
+      ...cleanData,
       image: imageUrl,
     });
     return NextResponse.json({ success: true, data: product }, { status: 201 });
     // eslint-disable-next-line
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Error adding shoe", error: error?.message, success: false },
+      {
+        message: "Error adding product",
+        error: error?.message,
+        success: false,
+      },
       { status: 500 },
     );
   }

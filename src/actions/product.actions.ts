@@ -1,6 +1,7 @@
 "use server";
 
 import { IProduct } from "@/types/product-types";
+import { IApiResponse } from "@/types/response.type";
 import { revalidatePath } from "next/cache";
 
 export type ActionState = {
@@ -51,6 +52,23 @@ export async function getProducts(): Promise<IProduct> {
     cache: "no-cache",
   });
   const result = await res.json();
-  console.log("Response from getProducts:", result);
   return result;
 }
+
+export const getProductById = async (id: string): Promise<IApiResponse> => {
+  const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+    method: "GET",
+    cache: "no-cache",
+  });
+  const result = await response.json();
+  return result;
+};
+
+export const deleteProductById = async (id: string): Promise<IApiResponse> => {
+  const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+    method: "DELETE",
+    // cache: "no-cache",
+  });
+  const result = await response.json();
+  return result;
+};
