@@ -4,4 +4,5 @@ export interface IApiResponse {
   //eslint-disable-next-line
   data: any;
   error?: string;
+  token?: string;
 }

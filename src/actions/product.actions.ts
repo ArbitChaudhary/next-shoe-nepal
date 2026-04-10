@@ -70,5 +70,22 @@ export const deleteProductById = async (id: string): Promise<IApiResponse> => {
     // cache: "no-cache",
   });
   const result = await response.json();
+  revalidatePath("/admin/products");
+  return result;
+};
+
+export const updateProductById = async ({
+  id,
+  data,
+}: {
+  id: string;
+  data: FormData;
+}): Promise<IApiResponse> => {
+  const res = await fetch(`http://localhost:3000/api/products/${id}`, {
+    method: "PATCH",
+    body: data,
+  });
+  const result = await res.json();
+  revalidatePath("/admin/products");
   return result;
 };

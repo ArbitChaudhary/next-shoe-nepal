@@ -83,7 +83,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
       <Toaster position="top-right" richColors closeButton duration={3000} />
     </div>
   );

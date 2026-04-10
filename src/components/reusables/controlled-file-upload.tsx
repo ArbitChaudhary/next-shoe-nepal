@@ -20,6 +20,8 @@ interface ControlledFileUploadProps<T extends FieldValues> {
   errors?: FieldErrors<T>;
 }
 
+type FileOrString = File | string;
+
 export function ControlledFileUpload<T extends FieldValues>({
   control,
   name,
@@ -35,7 +37,11 @@ export function ControlledFileUpload<T extends FieldValues>({
       control={control}
       name={name}
       render={({ field: { value, onChange, ...rest } }) => {
-        const files = Array.isArray(value) ? value : value ? [value] : [];
+        const files = Array.isArray(value)
+          ? (value as FileOrString[])
+          : value
+            ? [value as FileOrString]
+            : ([] as FileOrString[]);
         const handleClick = () => {
           if (fileRef.current) {
             fileRef.current.click();
@@ -76,16 +82,27 @@ export function ControlledFileUpload<T extends FieldValues>({
             </div>
             {files.length > 0 && (
               <>
-                {files.map((file, index) => (
-                  <Image
-                    key={index}
-                    src={URL.createObjectURL(file)}
-                    alt="Image"
-                    className="rounded-md mt-2"
-                    width={80}
-                    height={80}
-                  />
-                ))}
+                {files.map((file, index) =>
+                  file instanceof File ? (
+                    <Image
+                      key={index}
+                      src={URL.createObjectURL(file)}
+                      alt="Image"
+                      className="rounded-md mt-2"
+                      width={80}
+                      height={80}
+                    />
+                  ) : (
+                    <Image
+                      key={index}
+                      src={file}
+                      alt="Image"
+                      className="rounded-md mt-2"
+                      width={80}
+                      height={80}
+                    />
+                  ),
+                )}
               </>
             )}
           </React.Fragment>

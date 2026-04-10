@@ -2,6 +2,7 @@
 
 import { LucideIcon } from "lucide-react";
 import { Button } from "../button";
+import { cn } from "@/lib/utils";
 
 interface LoadingButtonProps {
   isLoading?: boolean;
@@ -10,6 +11,7 @@ interface LoadingButtonProps {
   onClick?: () => void;
   disabled?: boolean;
   type: "button" | "submit" | "reset";
+  className?: string;
 }
 
 const LoadingButton: React.FC<LoadingButtonProps> = ({
@@ -19,17 +21,21 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({
   onClick,
   disabled = false,
   type = "button",
+  className,
 }) => {
   return (
     <Button
       type={type}
       onClick={onClick}
       disabled={disabled || isLoading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-        disabled || isLoading
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-primary text-gray-500 hover:bg-primary-dark"
-      }`}
+      className={cn(
+        `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed ${
+          disabled || isLoading
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-primary text-gray-500 hover:bg-primary-dark"
+        }`,
+        className,
+      )}
     >
       {isLoading ? (
         <svg

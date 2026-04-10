@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import gsap from "gsap";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,8 +26,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { IProduct } from "@/types/product-types";
 import ProductDetailModal from "@/modals/product-detail-modal";
-import { getProductById } from "@/actions/product.actions";
+import { deleteProductById, getProductById } from "@/actions/product.actions";
 import { toast } from "sonner";
+import DeleteModal from "@/modals/delete-modal";
 
 const Products = ({ products }: { products: IProduct[] }) => {
   const [search, setSearch] = useState("");
@@ -35,14 +36,38 @@ const Products = ({ products }: { products: IProduct[] }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [product, setProduct] = useState<IProduct | null>(null);
 
-  const filtered = products.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCategory =
-      categoryFilter === "all" || p.category === categoryFilter;
-    return matchSearch && matchCategory;
-  });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
+  const [isPending, startTransition] = useTransition();
+
+  const handleOpenDeleteModal = (id: string) => {
+    setSelectedProductId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setSelectedProductId(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleDeleteProduct = async () => {
+    startTransition(async () => {
+      const result = await deleteProductById(selectedProductId as string);
+      if (result.success) {
+        toast.success(result.message || "Product deleted successfully");
+        handleCloseDeleteModal();
+      }
+      if (!result.success) {
+        toast.error(
+          result.error || result.message || "Failed to delete product",
+        );
+      }
+    });
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -63,15 +88,21 @@ const Products = ({ products }: { products: IProduct[] }) => {
   };
 
   const handleOpenProductModal = async (id: string) => {
-    setSelectedProductId(id);
-    setIsModalOpen(true);
+    const res = await getProductById(id);
+    if (res.success) {
+      setProduct(res.data);
+      setIsModalOpen(true);
+    }
+    if (!res.success) {
+      toast.error(res.error || "Failed to fetch product details.");
+    }
   };
   const handleModalClose = () => {
     setIsModalOpen(false);
   };
 
   return (
-    <div ref={pageRef} className="p-8 space-y-8">
+    <div ref={pageRef} className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-display tracking-wide">Products</h1>
@@ -185,10 +216,18 @@ const Products = ({ products }: { products: IProduct[] }) => {
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
-                      <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                      <button
+                        onClick={() =>
+                          router.push(`/admin/products/edit/${product._id}`)
+                        }
+                        className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                      >
                         <Edit className="w-3.5 h-3.5" />
                       </button>
-                      <button className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                      <button
+                        onClick={() => handleOpenDeleteModal(product._id)}
+                        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -199,14 +238,17 @@ const Products = ({ products }: { products: IProduct[] }) => {
           </Table>
         </CardContent>
       </Card>
-      {isModalOpen && (
-        <ProductDetailModal
-          open={isModalOpen}
-          onClose={handleModalClose}
-          productId={selectedProductId}
-          // product={product as IProduct}
-        />
-      )}
+      <ProductDetailModal
+        open={isModalOpen}
+        onClose={handleModalClose}
+        product={product as IProduct}
+      />
+      <DeleteModal
+        open={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onDelete={handleDeleteProduct}
+        isLoading={isPending}
+      />
     </div>
   );
 };

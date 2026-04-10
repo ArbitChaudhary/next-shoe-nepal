@@ -291,6 +291,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           type="submit"
           title="Add Product"
           isLoading={isLoading}
+          disabled={isLoading}
         />
         <Button variant="outline" type="button" onClick={handleCancel}>
           Cancel
